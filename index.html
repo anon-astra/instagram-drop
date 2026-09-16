@@ -25,8 +25,8 @@
     <section class="session-box" aria-labelledby="session-label">
       <div class="index"><span id="session-label">INSTAGRAM SESSION</span><span id="sessionState">NOT SAVED</span></div>
       <input id="session" class="session-input" type="password" inputmode="text" autocomplete="off" placeholder="Paste sessionid value" aria-label="Instagram session ID">
-      <div class="session-actions"><button class="btn primary" id="saveSession">SAVE FOR THIS TAB</button><button class="btn" id="eraseSession">ERASE</button></div>
-      <p class="session-note">Kept in session storage and cleared when this tab closes.</p>
+      <div class="session-actions"><button class="btn primary" id="saveSession">SAVE ON THIS DEVICE</button><button class="btn" id="eraseSession">ERASE</button></div>
+      <p class="session-note">Kept in this browser until you erase it or clear site data. Never commit this value to GitHub.</p>
     </section>
     <section class="stage" aria-labelledby="input-label">
       <div class="index"><span id="input-label">INSTAGRAM LINK</span><span>01—02</span></div>
@@ -38,7 +38,7 @@
       <div class="result-meta"><span id="count">01 MEDIA ITEM</span><span>READY</span></div>
       <button class="btn primary save" id="save">DOWNLOAD</button>
     </section>
-    <p class="status" id="status">Works with public Instagram posts and Reels.</p>
+    <p class="status" id="status">Works with public Instagram posts and Reels. No Instagram login required.</p>
     <p class="legal">Save only media you own or have permission to download.</p>
   </main>
   <script>
@@ -46,14 +46,14 @@
     const $=id=>document.getElementById(id), input=$('url'), find=$('find'), result=$('result'), preview=$('preview'), status=$('status'), save=$('save'), count=$('count'), sessionInput=$('session'), sessionState=$('sessionState');
     let items=[],currentIndex=0,touchStartX=0;
     const SESSION_KEY='drop_instagram_session';
-    function syncSessionState(){const saved=sessionStorage.getItem(SESSION_KEY);sessionState.textContent=saved?'SAVED':'NOT SAVED';sessionState.classList.toggle('session-state',!!saved);sessionInput.value=saved||''}
+    function syncSessionState(){const saved=localStorage.getItem(SESSION_KEY);sessionState.textContent=saved?'SAVED':'NOT SAVED';sessionState.classList.toggle('session-state',!!saved);sessionInput.value=saved||''}
     const canonical=value=>{const m=value.match(/https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[A-Za-z0-9_-]+\/?/i);if(!m)throw Error('Paste a public Instagram post or Reel link.');return m[0].replace(/\/+$/,'/')};
-    async function resolve(){try{find.disabled=true;find.innerHTML='<span class="spinner"></span>WORKING';result.classList.remove('show');status.textContent='Reading the public post…';const url=canonical(input.value),sessionId=sessionStorage.getItem(SESSION_KEY);if(!sessionId)throw Error('Save your Instagram session ID first.');const response=await fetch(API+'/api/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,sessionId})});const data=await response.json();if(!response.ok)throw Error(data.error||`Resolver returned ${response.status}.`);items=data.items;if(!items.length)throw Error('Instagram did not expose downloadable media for this post.');render()}catch(e){status.textContent=e.message||'Could not read this post. Confirm it is public and try again.'}finally{find.disabled=false;find.textContent='FIND MEDIA'}}
+    async function resolve(){try{find.disabled=true;find.innerHTML='<span class="spinner"></span>WORKING';result.classList.remove('show');status.textContent='Reading the public post…';const url=canonical(input.value),sessionId=localStorage.getItem(SESSION_KEY);if(!sessionId)throw Error('Save your Instagram session ID first.');const response=await fetch(API+'/api/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url,sessionId})});const data=await response.json();if(!response.ok)throw Error(data.error||`Resolver returned ${response.status}.`);items=data.items;if(!items.length)throw Error('Instagram did not expose downloadable media for this post.');render()}catch(e){status.textContent=e.message||'Could not read this post. Confirm it is public and try again.'}finally{find.disabled=false;find.textContent='FIND MEDIA'}}
     function showItem(index){currentIndex=(index+items.length)%items.length;const item=items[currentIndex],position=`${currentIndex+1} / ${items.length}`,media=item.type==='video'?`<video src="${item.url}" controls playsinline></video>`:`<img src="${item.url}" alt="Instagram carousel item ${currentIndex+1} of ${items.length}">`,controls=items.length>1?`<div class="carousel-nav"><button class="carousel-arrow" id="previous" aria-label="Previous media">‹</button><button class="carousel-arrow" id="next" aria-label="Next media">›</button></div><div class="carousel-dots" aria-hidden="true">${items.map((_,i)=>`<span class="carousel-dot${i===currentIndex?' active':''}"></span>`).join('')}</div>`:'';preview.innerHTML=`${media}<span class="badge">${items.length>1?position:item.type.toUpperCase()}</span>${controls}`;if(items.length>1){$('previous').onclick=()=>showItem(currentIndex-1);$('next').onclick=()=>showItem(currentIndex+1)}}
     function render(){currentIndex=0;showItem(0);count.textContent=String(items.length).padStart(2,'0')+` MEDIA ITEM${items.length===1?'':'S'}`;save.textContent=items.length===1?'DOWNLOAD':'DOWNLOAD ALL';status.textContent=items.length===1?'Ready to download.':'Swipe or use the arrows to view every carousel item.';result.classList.add('show')}
     async function download(item,i){const response=await fetch(item.url);if(!response.ok)throw Error(`Download failed (${response.status}).`);const blob=await response.blob(), ext=item.type==='video'?'mp4':'jpg', a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`DROP_${Date.now()}_${i+1}.${ext}`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
-    $('saveSession').onclick=()=>{const value=sessionInput.value.trim();if(!value){status.textContent='Paste the sessionid value first.';return}sessionStorage.setItem(SESSION_KEY,value);syncSessionState();status.textContent='Session saved for this tab only.'};
-    $('eraseSession').onclick=()=>{sessionStorage.removeItem(SESSION_KEY);sessionInput.value='';syncSessionState();status.textContent='Session erased from this tab.'};
+    $('saveSession').onclick=()=>{const value=sessionInput.value.trim();if(!value){status.textContent='Paste the sessionid value first.';return}localStorage.setItem(SESSION_KEY,value);syncSessionState();status.textContent='Session saved on this device.'};
+    $('eraseSession').onclick=()=>{localStorage.removeItem(SESSION_KEY);sessionInput.value='';syncSessionState();status.textContent='Session erased from this device.'};
     $('paste').onclick=async()=>{try{input.value=await navigator.clipboard.readText()}catch{status.textContent='Press and hold the box, then choose Paste.'}};find.onclick=resolve;save.onclick=async()=>{save.disabled=true;try{for(let i=0;i<items.length;i++){status.textContent=`Downloading ${i+1} / ${items.length}…`;await download(items[i],i)}status.textContent='Download complete.'}catch(e){status.textContent=e.message}finally{save.disabled=false}};
     input.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')resolve()});
     preview.addEventListener('touchstart',e=>{touchStartX=e.changedTouches[0].clientX},{passive:true});
