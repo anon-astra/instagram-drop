@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Download media from public Instagram posts and Reels.">
+  <title>Drop</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23000'/%3E%3Ccircle cx='32' cy='32' r='13' fill='%23fff'/%3E%3Ccircle cx='47' cy='17' r='5' fill='%23d71920'/%3E%3C/svg%3E">
+  <style>
+    :root{color-scheme:dark;--ink:#f4f4f2;--muted:#8c8c89;--line:#292927;--panel:#111110;--red:#d71920;--ease:cubic-bezier(.2,.75,.2,1)}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#000;color:var(--ink);font-family:Inter,Arial,sans-serif}body{min-height:100svh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+    button,input{font:inherit}.shell{width:min(100%,520px);min-height:100svh;margin:auto;padding:20px 20px 34px;display:flex;flex-direction:column}.mast{height:62px;display:flex;align-items:center;justify-content:space-between}.brand{font:700 1.8rem/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em}.brand i{display:inline-block;width:9px;height:9px;margin-left:8px;border-radius:50%;background:var(--red)}.mark{font:700 .75rem/1 ui-monospace,monospace;color:#aaa;letter-spacing:.15em}
+    .stage{position:relative;margin-top:22px}.index{display:flex;justify-content:space-between;margin-bottom:13px;color:#999;font:700 .75rem/1 ui-monospace,monospace;letter-spacing:.12em}.pastebox{width:100%;min-height:112px;padding:19px 18px;border:1px solid #333;border-radius:20px;background:var(--panel);color:#fff;font-size:1rem;line-height:1.4;outline:none;resize:none;transition:border-color .2s}.pastebox:focus{border-color:#757571}.pastebox::placeholder{color:#696966}
+    .buttons{display:grid;grid-template-columns:.85fr 1.35fr;gap:10px;margin-top:12px}.btn{min-height:56px;padding:0 18px;border:1px solid #393937;border-radius:18px;background:#111;color:white;font:800 .78rem/1 ui-monospace,monospace;letter-spacing:.08em;cursor:pointer;transition:transform .15s var(--ease),opacity .15s}.btn:active{transform:scale(.98)}.btn.primary{border-color:#fff;background:#fff;color:#000}.btn:disabled{opacity:.45;cursor:default}
+    .result{display:none;margin-top:26px}.result.show{display:block;animation:rise .35s var(--ease)}.preview{position:relative;overflow:hidden;aspect-ratio:4/5;border:1px solid #222;border-radius:24px;background:#0b0b0b}.preview img,.preview video{width:100%;height:100%;display:block;object-fit:cover}.preview .empty{height:100%;display:grid;place-items:center;color:#666;font:700 .78rem/1.5 ui-monospace,monospace;text-align:center;letter-spacing:.08em}.badge{position:absolute;top:14px;right:14px;padding:9px 12px;border-radius:100px;background:rgba(0,0,0,.75);backdrop-filter:blur(12px);font:700 .7rem/1 ui-monospace,monospace;letter-spacing:.08em}.result-meta{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 12px;font:700 .76rem/1 ui-monospace,monospace;letter-spacing:.1em}.save{width:100%}.status{min-height:44px;margin:18px 2px 0;color:var(--muted);font-size:.88rem;line-height:1.55}.legal{margin-top:auto;padding-top:40px;color:#62625f;font-size:.75rem;line-height:1.5}.dots{position:fixed;right:0;top:0;width:74px;height:74px;opacity:.24;background-image:radial-gradient(#fff 1px,transparent 1px);background-size:8px 8px;pointer-events:none;mask-image:linear-gradient(225deg,#000,transparent 72%)}
+    .spinner{display:inline-block;width:12px;height:12px;margin-right:8px;border:2px solid #555;border-top-color:#fff;border-radius:50%;vertical-align:-2px;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(1turn)}}@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+    @media(min-width:700px){body{display:grid;place-items:center}.shell{min-height:auto;margin:40px auto;padding:24px 28px 32px;border:1px solid #1c1c1b;border-radius:34px;background:#050505;box-shadow:0 30px 80px rgba(0,0,0,.7)}}
+  </style>
+</head>
+<body>
+  <div class="dots"></div>
+  <main class="shell">
+    <header class="mast"><div class="brand">DROP<i></i></div><div class="mark">PUBLIC / 01</div></header>
+    <section class="stage" aria-labelledby="input-label">
+      <div class="index"><span id="input-label">INSTAGRAM LINK</span><span>01—02</span></div>
+      <textarea id="url" class="pastebox" aria-label="Instagram post or Reel URL" placeholder="Paste a public post or Reel link" autocomplete="off" spellcheck="false"></textarea>
+      <div class="buttons"><button class="btn" id="paste">PASTE</button><button class="btn primary" id="find">FIND MEDIA</button></div>
+    </section>
+    <section id="result" class="result" aria-live="polite">
+      <div class="preview" id="preview"><div class="empty">MEDIA PREVIEW</div></div>
+      <div class="result-meta"><span id="count">01 MEDIA ITEM</span><span>READY</span></div>
+      <button class="btn primary save" id="save">DOWNLOAD</button>
+    </section>
+    <p class="status" id="status">Works with public Instagram posts and Reels. No Instagram login required.</p>
+    <p class="legal">Save only media you own or have permission to download.</p>
+  </main>
+  <script>
+    const API='https://drop-public-media.anon69f.chatgpt.site';
+    const $=id=>document.getElementById(id), input=$('url'), find=$('find'), result=$('result'), preview=$('preview'), status=$('status'), save=$('save'), count=$('count');
+    let items=[];
+    const canonical=value=>{const m=value.match(/https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[A-Za-z0-9_-]+\/?/i);if(!m)throw Error('Paste a public Instagram post or Reel link.');return m[0].replace(/\/+$/,'/')};
+    async function resolve(){try{find.disabled=true;find.innerHTML='<span class="spinner"></span>WORKING';result.classList.remove('show');status.textContent='Reading the public post…';const url=canonical(input.value);const response=await fetch(API+'/api/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});const data=await response.json();if(!response.ok)throw Error(data.error||`Resolver returned ${response.status}.`);items=data.items;if(!items.length)throw Error('Instagram did not expose downloadable media for this post.');render()}catch(e){status.textContent=e.message||'Could not read this post. Confirm it is public and try again.'}finally{find.disabled=false;find.textContent='FIND MEDIA'}}
+    function render(){const first=items[0];preview.innerHTML=first.type==='video'?`<video src="${first.url}" controls playsinline></video><span class="badge">VIDEO</span>`:`<img src="${first.url}" alt="Instagram media preview"><span class="badge">IMAGE</span>`;count.textContent=String(items.length).padStart(2,'0')+` MEDIA ITEM${items.length===1?'':'S'}`;save.textContent=items.length===1?'DOWNLOAD':'DOWNLOAD ALL';status.textContent=items.length===1?'Ready to download.':'Carousel ready. Your browser may ask before each file.';result.classList.add('show')}
+    async function download(item,i){const response=await fetch(item.url);if(!response.ok)throw Error(`Download failed (${response.status}).`);const blob=await response.blob(), ext=item.type==='video'?'mp4':'jpg', a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`DROP_${Date.now()}_${i+1}.${ext}`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+    $('paste').onclick=async()=>{try{input.value=await navigator.clipboard.readText()}catch{status.textContent='Press and hold the box, then choose Paste.'}};find.onclick=resolve;save.onclick=async()=>{save.disabled=true;try{for(let i=0;i<items.length;i++){status.textContent=`Downloading ${i+1} / ${items.length}…`;await download(items[i],i)}status.textContent='Download complete.'}catch(e){status.textContent=e.message}finally{save.disabled=false}};
+    input.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')resolve()});
+  </script>
+</body>
+</html>
