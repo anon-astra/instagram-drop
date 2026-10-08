@@ -23,20 +23,51 @@ public class MainActivity extends Activity {
   String shared="";
   int background=0xff000000;
   void message(String s){runOnUiThread(()->status.setText(s));}
+  int white=0xfff4f4f2, muted=0xff8c8c89, red=0xffd71920;
+  int dp(float n){return (int)(getResources().getDisplayMetrics().density*n+.5f);}
+  android.graphics.drawable.GradientDrawable bg(int color,int radius,int stroke){
+    android.graphics.drawable.GradientDrawable d=new android.graphics.drawable.GradientDrawable();
+    d.setColor(color);d.setCornerRadius(dp(radius));if(stroke!=0)d.setStroke(dp(1),stroke);return d;
+  }
+  TextView text(String value,int size,int color,boolean bold){
+    TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(color);
+    t.setFontFeatureSettings("kern");if(bold)t.setTypeface(android.graphics.Typeface.create("monospace",1));return t;
+  }
+  void add(LinearLayout parent,View child,int height,int top){
+    LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,height<0?height:dp(height));p.topMargin=dp(top);parent.addView(child,p);
+  }
   @Override public void onCreate(Bundle b){
     super.onCreate(b);
     getWindow().setStatusBarColor(Color.BLACK);getWindow().setNavigationBarColor(Color.BLACK);
-    LinearLayout root=new LinearLayout(this);root.setOrientation(1);root.setPadding(36,50,36,24);root.setBackgroundColor(background);
-    TextView title=new TextView(this);title.setText("DROP  •");title.setTextSize(30);title.setTextColor(Color.WHITE);root.addView(title);
-    TextView intro=new TextView(this);intro.setText("SHARE AN INSTAGRAM LINK TO DOWNLOAD");intro.setTextColor(0xffaaaaaa);intro.setPadding(0,24,0,20);root.addView(intro);
-    link=new EditText(this);link.setSingleLine(false);link.setMinLines(2);link.setHint("Instagram post / Reel URL");link.setTextColor(Color.WHITE);link.setHintTextColor(0xff888888);root.addView(link);
-    session=new EditText(this);session.setSingleLine(true);session.setHint("Instagram sessionid (required by existing resolver)");session.setInputType(129);session.setTextColor(Color.WHITE);session.setHintTextColor(0xff888888);
-    session.setText(getPreferences(0).getString("session",""));root.addView(session);
-    download=new Button(this);download.setText("DOWNLOAD TO GALLERY");root.addView(download);
-    status=new TextView(this);status.setTextColor(Color.LTGRAY);status.setText("Ready. Share a link from Instagram or paste it here.");status.setPadding(0,20,0,0);root.addView(status);
-    setContentView(root);
-    download.setOnClickListener(v->start());
-    receive(getIntent());
+    getWindow().getDecorView().setSystemUiVisibility(0);
+    ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);scroll.setBackgroundColor(Color.BLACK);
+    LinearLayout root=new LinearLayout(this);root.setOrientation(1);root.setPadding(dp(20),dp(18),dp(20),dp(28));
+    scroll.addView(root);setContentView(scroll);
+    LinearLayout mast=new LinearLayout(this);mast.setGravity(Gravity.CENTER_VERTICAL);mast.setOrientation(0);
+    TextView title=text("DROP",29,white,true);title.setLetterSpacing(.16f);mast.addView(title);
+    TextView dot=text(" ●",21,red,true);mast.addView(dot);
+    add(root,mast,58,0);
+    TextView marker=text("PUBLIC / 01",11,muted,true);marker.setLetterSpacing(.13f);add(root,marker,22,0);
+    TextView heading=text("INSTAGRAM LINK                                      01—02",11,muted,true);
+    heading.setSingleLine(true);heading.setEllipsize(android.text.TextUtils.TruncateAt.END);heading.setLetterSpacing(.05f);add(root,heading,24,28);
+    link=new EditText(this);link.setGravity(Gravity.TOP);link.setTextSize(16);link.setPadding(dp(18),dp(18),dp(18),dp(12));
+    link.setMinLines(2);link.setHint("Paste a public post or Reel link");link.setTextColor(white);link.setHintTextColor(0xff696966);
+    link.setBackground(bg(0xff111110,20,0xff333333));add(root,link,112,0);
+    TextView sessionLabel=text("INSTAGRAM SESSION",11,muted,true);sessionLabel.setLetterSpacing(.1f);add(root,sessionLabel,23,26);
+    session=new EditText(this);session.setSingleLine(true);session.setTextSize(14);
+    session.setPadding(dp(16),0,dp(16),0);session.setHint("Instagram sessionid");session.setInputType(129);
+    session.setTextColor(white);session.setHintTextColor(0xff696966);
+    session.setBackground(bg(0xff111110,15,0xff292927));
+    session.setText(getPreferences(0).getString("session",""));add(root,session,54,0);
+    TextView note=text("Stored on this device. Required by the existing resolver.",12,muted,false);
+    add(root,note,-2,10);
+    download=new Button(this);download.setText("DOWNLOAD TO GALLERY");download.setTextSize(13);
+    download.setAllCaps(false);download.setTypeface(android.graphics.Typeface.create("monospace",1));
+    download.setTextColor(Color.BLACK);download.setBackground(bg(Color.WHITE,18,0));add(root,download,56,26);
+    status=text("Works with public Instagram posts and Reels.",14,muted,false);add(root,status,-2,20);
+    TextView legal=text("Save only media you own or have permission to download.",12,0xff62625f,false);
+    add(root,legal,-2,40);
+    download.setOnClickListener(v->start());receive(getIntent());
   }
   @Override protected void onNewIntent(Intent i){super.onNewIntent(i);setIntent(i);receive(i);}
   void receive(Intent i){
